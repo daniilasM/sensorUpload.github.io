@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Flash XIAO ESP32-S3 Firmware</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script type="module">
+      import "https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module";
+    </script>
+  </head>
+  <body style="font-family:system-ui;max-width:720px;margin:40px auto;padding:0 16px">
+    <h1>Install firmware</h1>
+    <p>Use Chrome/Edge on desktop. Plug your XIAO ESP32-S3 via USB-C, click Connect.</p>
+    <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+    <details style="margin-top:16px">
+      <summary>Troubleshooting</summary>
+      <ul>
+        <li>If it can’t connect: hold <b>BOOT</b>, tap <b>RESET</b>, then release BOOT.</li>
+        <li>Windows 10+/macOS usually need no drivers (XIAO uses native USB CDC).</li>
+      </ul>
+    </details>
+  </body>
+</html>
