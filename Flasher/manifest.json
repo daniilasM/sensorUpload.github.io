@@ -6,10 +6,11 @@
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "RG_deep_learning_deployed_3S_Ghana_V2.ino.XIAO_ESP32S3.bin", "offset": 65536  }
+        { "path": "RG_deep_learning_deployed_3S_Ghana_V2.ino.XIAO_ESP32S3.bin", "offset": 65536 }
       ]
     }
   ]
 }
+
 
 
