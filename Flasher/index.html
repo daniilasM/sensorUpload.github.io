@@ -1,25 +1,140 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Flash XIAO ESP32-S3 Firmware_V3</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <script type="module">
-      import "https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module";
-    </script>
-  </head>
-  <body style="font-family:system-ui;max-width:720px;margin:40px auto;padding:0 16px">
-    <h1>Install firmware</h1>
-    <p>Use Chrome/Edge on desktop. Plug your XIAO ESP32-S3 via USB-C, click Connect.</p>
-    <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
-    <details style="margin-top:16px">
-      <summary>Troubleshooting</summary>
-      <ul>
-        <li>If it can’t connect: hold <b>BOOT</b>, tap <b>RESET</b>, then release BOOT.</li>
-        <li>Windows 10+/macOS usually need no drivers (XIAO uses native USB CDC).</li>
-      </ul>
-    </details>
-  </body>
+<head>
+<meta charset="utf-8" />
+<title>ESP32-S3 Web Flasher (Pick BIN)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;margin:2rem;line-height:1.4}
+  .card{border:1px solid #ddd;border-radius:10px;padding:1rem;margin-top:1rem}
+  label{display:block;margin:.4rem 0 .2rem}
+  input[type="file"]{width:100%}
+  .row{display:flex;gap:1rem;flex-wrap:wrap}
+  .row > div{flex:1 1 260px}
+  small{color:#666}
+</style>
+</head>
+<body>
+<h1>Flash ESP32-S3 (choose your BIN)</h1>
+
+<div class="card">
+  <h3>Simple (one merged .bin)</h3>
+  <label>Firmware (.bin at offset 0x0)</label>
+  <input id="mergedBin" type="file" accept=".bin" />
+  <p id="simpleInfo"><small>No file selected.</small></p>
+  <esp-web-install-button id="btnSimple"></esp-web-install-button>
+</div>
+
+<div class="card">
+  <h3>Advanced (separate parts)</h3>
+  <div class="row">
+    <div>
+      <label>bootloader.bin (default offset 0x1000)</label>
+      <input id="bootBin" type="file" accept=".bin" />
+      <label>Offset</label>
+      <input id="bootOff" type="text" value="0x1000" />
+    </div>
+    <div>
+      <label>partition-table.bin (default offset 0x8000)</label>
+      <input id="partBin" type="file" accept=".bin" />
+      <label>Offset</label>
+      <input id="partOff" type="text" value="0x8000" />
+    </div>
+    <div>
+      <label>boot_app0.bin (default offset 0xE000) <small>(optional)</small></label>
+      <input id="bootApp0Bin" type="file" accept=".bin" />
+      <label>Offset</label>
+      <input id="bootApp0Off" type="text" value="0xE000" />
+    </div>
+    <div>
+      <label>app.bin (your firmware, default offset 0x10000)</label>
+      <input id="appBin" type="file" accept=".bin" />
+      <label>Offset</label>
+      <input id="appOff" type="text" value="0x10000" />
+    </div>
+  </div>
+  <p id="advInfo"><small>Select at least bootloader, partition table, and app.</small></p>
+  <esp-web-install-button id="btnAdv"></esp-web-install-button>
+</div>
+
+<script>
+function hexToInt(v){
+  if(typeof v !== "string") return 0;
+  v = v.trim();
+  if(v.startsWith("0x") || v.startsWith("0X")) return parseInt(v,16);
+  return parseInt(v,10);
+}
+
+function makeManifest(parts, name="User Firmware", version="1.0.0"){
+  const manifest = {
+    name, version, new_install_prompt_erase: true,
+    builds: [{
+      chipFamily: "ESP32-S3",
+      parts
+    }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
+  return URL.createObjectURL(blob);
+}
+
+// Simple: one merged bin at 0x0
+document.getElementById("mergedBin").addEventListener("change", e=>{
+  const file = e.target.files?.[0];
+  const info = document.getElementById("simpleInfo");
+  const btn  = document.getElementById("btnSimple");
+  if(!file){
+    info.innerHTML = "<small>No file selected.</small>";
+    btn.removeAttribute("manifest");
+    return;
+  }
+  const fileUrl = URL.createObjectURL(file);
+  const manifestUrl = makeManifest([{ path: fileUrl, offset: 0 }], file.name, "merged");
+  btn.manifest = manifestUrl;
+  info.textContent = `Will flash: ${file.name} @ 0x0`;
+});
+
+// Advanced: separate parts
+function buildAdvancedManifest(){
+  const bootF = document.getElementById("bootBin").files?.[0];
+  const partF = document.getElementById("partBin").files?.[0];
+  const appF  = document.getElementById("appBin").files?.[0];
+  const bootApp0F = document.getElementById("bootApp0Bin").files?.[0];
+
+  const bootOff = hexToInt(document.getElementById("bootOff").value);
+  const partOff = hexToInt(document.getElementById("partOff").value);
+  const appOff  = hexToInt(document.getElementById("appOff").value);
+  const bootApp0Off = hexToInt(document.getElementById("bootApp0Off").value);
+
+  const info = document.getElementById("advInfo");
+  const btn  = document.getElementById("btnAdv");
+
+  if(!bootF || !partF || !appF){
+    info.innerHTML = "<small>Select bootloader, partition-table and app.</small>";
+    btn.removeAttribute("manifest");
+    return;
+  }
+
+  const parts = [
+    { path: URL.createObjectURL(bootF),      offset: bootOff },
+    { path: URL.createObjectURL(partF),      offset: partOff },
+    // boot_app0 is optional but recommended for OTA-enabled builds
+    ...(bootApp0F ? [{ path: URL.createObjectURL(bootApp0F), offset: bootApp0Off }] : []),
+    { path: URL.createObjectURL(appF),       offset: appOff }
+  ];
+  const manifestUrl = makeManifest(parts, appF.name, "custom");
+  btn.manifest = manifestUrl;
+
+  let list = parts.map(p => `${(new URL(p.path)).pathname.split('/').pop() || 'blob'} @ 0x${p.offset.toString(16)}`).join("<br>");
+  info.innerHTML = list;
+}
+
+// Rebuild manifest whenever any advanced input changes
+["bootBin","partBin","bootApp0Bin","appBin","bootOff","partOff","bootApp0Off","appOff"]
+  .forEach(id => document.getElementById(id).addEventListener("change", buildAdvancedManifest));
+</script>
+</body>
 </html>
+
 
 
