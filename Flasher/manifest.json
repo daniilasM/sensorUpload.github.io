@@ -6,14 +6,12 @@
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "led_test.ino.bootloader.bin", "offset": 4096 },
-        { "path": "led_test.ino.partitions.bin", "offset": 32768 },
-        { "path": "boot_app0.bin", "offset": 57344 },
-        { "path": "led_test.ino.bin", "offset": 65536 }
+        { "path": "led_test.ino.XIAO_ESP32S3.bin", "offset": 4096 },
       ]
     }
   ]
 }
+
 
 
 
