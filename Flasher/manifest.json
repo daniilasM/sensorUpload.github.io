@@ -6,11 +6,12 @@
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "led_test.ino.XIAO_ESP32S3.bin", "offset": 4096 },
+        { "path": "led_test.ino.XIAO_ESP32S3.bin", "offset": 4096 }
       ]
     }
   ]
 }
+
 
 
 
