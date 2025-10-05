@@ -6,11 +6,12 @@
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "led_test.ino.merged.bin", "offset": 0 }
+        { "path": "RG_deep_learning_deployed_3S_client_V2_app.ino.merged.bin", "offset": 0 }
       ]
     }
   ]
 }
+
 
 
 
